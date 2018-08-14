@@ -1,3 +1,13 @@
 html {
   font-family: monospace;
   font-size: 20px; }
+
+.site-box {
+  display: flex;
+  flex-direction: column; }
+  @media screen and (min-width: 600px) {
+    .site-box {
+      flex-direction: row; } }
+
+.contents {
+  margin-right: 20px; }

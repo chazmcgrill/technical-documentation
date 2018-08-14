@@ -12,9 +12,9 @@ const paths = {
     src: 'src/css/**/*.sass',
     dist: 'dist/assets/css'
   },
-  pug: {
-    src: './src/**/!(_)*.pug',
-    watch: './src/**/*.pug',
+  html: {
+    src: './src/*.html',
+    watch: './src/*.html',
     dist: 'dist'
   },
   js: {
@@ -30,10 +30,9 @@ const paths = {
 
 // -- FILE TASKS
 
-gulp.task('templates', () => {
-  return gulp.src(paths.pug.src)
-    .pipe(plugs.pug({ pretty: true }))
-    .pipe(gulp.dest(paths.pug.dist));
+gulp.task('html', () => {
+  return gulp.src(paths.html.src)
+    .pipe(gulp.dest(paths.html.dist));
 });
 
 gulp.task('sass', () => {
@@ -50,30 +49,31 @@ gulp.task('scripts', () => {
     .pipe(gulp.dest(paths.js.dist));
 });
 
-gulp.task('imageMin', () => {
+gulp.task('image-min', () => {
   return gulp.src(paths.img.src)
-    .pipe(plugs.imagemin([plugs.imagemin.jpegtran({ progressive: true })]))
+    .pipe(plugs.imagemin([
+      plugs.imagemin.jpegtran({ progressive: true }),
+      plugs.imagemin.optipng({ optimizationLevel: 5 })
+    ]))
     .pipe(gulp.dest(paths.img.dist))
 });
 
 
 // -- MAIN TASKS
 
-gulp.task('watch', () => {
-  gulp.watch(paths.pug.watch, gulp.series("templates"));
-  gulp.watch(paths.js.src, gulp.series("scripts"));
-  gulp.watch(paths.img.src, gulp.series("imageMin"));
-  gulp.watch(paths.sass.src, gulp.series("sass"));
-});
-
 gulp.task('browser-sync', () => {
-  return browserSync.init({
+  browserSync.init({
     server: { baseDir: DEV_DIR }
   });
+
+  gulp.watch(paths.html.watch, gulp.series("html")).on('change', browserSync.reload);
+  gulp.watch(paths.js.src, gulp.series("scripts")).on('change', browserSync.reload);
+  gulp.watch(paths.img.src, gulp.series("image-min")).on('change', browserSync.reload);
+  gulp.watch(paths.sass.src, gulp.series("sass")).on('change', browserSync.reload);
 });
 
-const build = gulp.series('sass', 'templates', 'scripts', 'imageMin');
+const build = gulp.series('sass', 'scripts', 'image-min', 'html', 'browser-sync');
 
-gulp.task('default', gulp.parallel(build, gulp.series(gulp.parallel('browser-sync', 'watch'))));
+gulp.task('default', gulp.parallel(build));
 gulp.task('prod', gulp.parallel(build));
 
